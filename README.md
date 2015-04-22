@@ -1,1 +1,1 @@
-Piano Roll with ability to make multi-track songs. Read more and check it out here: http://www.oliphaunts.com/pianoroll-js/
+Piano Roll with ability to play back files
