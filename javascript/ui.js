@@ -272,7 +272,7 @@ Grid.prototype.drawGrid = function(cellWidth, cellBeatLength, piano, notes) {
     
     var numCells = this.width / this.cellWidth;
     var cellsInMeasure = this.beatsPerMeter / this.cellBeatLength;
-    for(var i = 0; i < numCells; i++) {
+    for(var i = 0; i < numCells; i+=1) {
         if(i % cellsInMeasure == 0) {
             this.context.strokeStyle = '#000';
         }
@@ -285,7 +285,13 @@ Grid.prototype.drawGrid = function(cellWidth, cellBeatLength, piano, notes) {
         this.context.stroke();
         
         this.context.fillStyle = '#000'; 
-        this.measureCounterContext.fillText(i + 1, i * this.cellWidth + this.cellWidth / 2, 12);    
+        // this.measureCounterContext.fillText(i + 1, i * this.cellWidth + this.cellWidth / 2, 12);
+        i4 = i * 4;
+        d4 = this.cellWidth / 5;
+        this.measureCounterContext.fillText(i4 + 1, i * this.cellWidth + (d4 * 1), 12);
+        this.measureCounterContext.fillText(i4 + 2, i * this.cellWidth + (d4 * 2), 12);
+        this.measureCounterContext.fillText(i4 + 3, i * this.cellWidth + (d4 * 3), 12);
+        this.measureCounterContext.fillText(i4 + 4, i * this.cellWidth + (d4 * 4), 12);
 
     }
     
@@ -301,31 +307,31 @@ Grid.prototype.drawGrid = function(cellWidth, cellBeatLength, piano, notes) {
             //console.log(notes[i]);
         }
     }
-    this.grid.onmousemove = (function(e) {
-        var x = e.pageX - this.grid.offsetLeft + this.container.scrollLeft;
-        var y = e.pageY - this.grid.offsetTop + this.container.scrollTop;
-        var key = this.keys[this.getKeyIndex(x, y)];
-        if (key == undefined) {
-            return;
-        }
-        if (key != this.pastKey) {
-            this.piano.drawNote(key, true);
-            if (this.pastKey != null) {
-                this.piano.drawNote(this.pastKey, false);             
-            }     
-            this.pastKey = key;
-        }
-    }).bind(this);
+    // this.grid.onmousemove = (function(e) {
+        // var x = e.pageX - this.grid.offsetLeft + this.container.scrollLeft;
+        // var y = e.pageY - this.grid.offsetTop + this.container.scrollTop;
+        // var key = this.keys[this.getKeyIndex(x, y)];
+        // if (key == undefined) {
+            // return;
+        // }
+        // if (key != this.pastKey) {
+            // this.piano.drawNote(key, true);
+            // if (this.pastKey != null) {
+                // this.piano.drawNote(this.pastKey, false);             
+            // }     
+            // this.pastKey = key;
+        // }
+    // }).bind(this);
     
-    this.grid.onmousedown = (function(e) {
-        var x = e.pageX - this.grid.offsetLeft + this.container.scrollLeft;
-        var y = e.pageY - this.grid.offsetTop + this.container.scrollTop;;
-        this.processClick(x, y);
-    }).bind(this);
+    // this.grid.onmousedown = (function(e) {
+        // var x = e.pageX - this.grid.offsetLeft + this.container.scrollLeft;
+        // var y = e.pageY - this.grid.offsetTop + this.container.scrollTop;;
+        // this.processClick(x, y);
+    // }).bind(this);
     
-    this.grid.onmouseout = (function() {
-        this.piano.drawNote(this.pastKey, false);
-    }).bind(this);
+    // this.grid.onmouseout = (function() {
+        // this.piano.drawNote(this.pastKey, false);
+    // }).bind(this);
 };
 
 
@@ -341,10 +347,53 @@ Grid.prototype.removeAll = function() {
     this.drawNotes();
 };
 
-Grid.prototype.drawNote = function(x, y, height, width) {
-    this.noteContext.fillStyle = '#F00';
+Grid.prototype.drawNote = function(x, y, height, width, color) {
+	if (typeof(color) == 'undefined') {
+		color = '#F00';
+	}
+    this.noteContext.fillStyle = color;
     this.noteContext.fillRect(x, y, height, width);
     this.noteContext.strokeRect(x, y, height, width);
+};
+
+function getcolor(n) {
+        switch(true) {
+            case (n >= 52 && n <= 60):
+                return "#800080"; 		// purple
+            case (n >= 42 && n <= 51):
+                return "#00F";			// blue
+            case (n >= 32 && n <= 41):
+                return "#0F0";			// green
+            case (n >= 22 && n <= 31):
+                return "#FF0";				// yellow
+            case (n >= 12 && n <= 21):
+                return "#FA0";				// orange
+        }
+        return "#F00"; // red
+    }
+
+Grid.prototype.processSecond = function(minute, i, seconds, num) {
+	if (seconds >= this.keys.length || seconds < 0){
+		return;
+	}
+	num = num / 4;
+	var cellLocation = (minute/4) * this.cellWidth;
+	var notePixelLength = num / this.cellBeatLength * this.cellWidth;
+	var cellLocationOffset = 0;
+    var xPosition = cellLocation + cellLocationOffset;
+    var keyIndex = seconds;
+    var beatNumber = xPosition * this.cellBeatLength / this.cellWidth;
+    var yPosition = this.startY + keyIndex * this.keyHeight;
+    
+    var noteToDraw = new DrawnNote(xPosition, yPosition, notePixelLength, true);
+    
+    var currentIndex = xPosition / this.smallestPixelBeatIncrement;
+    var durationInIncrements = this.currentNoteDuration / this.smallestBeatIncrement;
+    durationInIncrements = num / this.smallestBeatIncrement;
+    this.addNotes(currentIndex, durationInIncrements, noteToDraw);
+    this.drawNote(xPosition, yPosition, notePixelLength, this.keyHeight, getcolor(60-seconds));
+    // this.piano.track.playNote(this.keys[keyIndex].frequency, 0, this.currentNoteDuration, 1);                  
+    this.piano.track.addNote(new Note(this.keys[keyIndex].frequency, beatNumber, this.currentNoteDuration, 1));
 };
 
 Grid.prototype.processClick = function(x, y, draw) {
@@ -386,7 +435,6 @@ Grid.prototype.processClick = function(x, y, draw) {
 
 
 Grid.prototype.addNote = function(note) {
-    //console.log(this.keys);
     for (var i = 0; i < this.keys.length; i++) {
         if (this.keys[i].frequency == note.frequency) {
             var currentIndex = note.beat * this.cellWidth / this.cellBeatLength / this.smallestPixelBeatIncrement;
@@ -394,7 +442,6 @@ Grid.prototype.addNote = function(note) {
             var notePixelLength = note.duration / this.cellBeatLength * this.cellWidth;
             var noteToDraw = new DrawnNote(note.beat * this.cellWidth / this.cellBeatLength, this.startY + i * this.keyHeight, notePixelLength, true);
             this.addNotes(currentIndex, durationInIncrements, noteToDraw);
-            //this.processClick(note.beat * this.cellWidth / this.cellBeatLength, this.startY + i * this.keyHeight , false);
         }
     }
 };
@@ -432,7 +479,6 @@ Grid.prototype.checkSameNote = function(noteToDraw, notes) {
 };
 
 Grid.prototype.drawNotes = function() {
-    //console.log(this.noteXLookup);
     //this.noteContext.save();
     //this.noteContext.setTransform(1, 0, 0, 1, 0, 0);
     this.noteContext.clearRect(0, 0, this.width, this.height);
@@ -466,13 +512,12 @@ var Controls = function(song, piano, grid, sequencer) {
     this.tracksElement = document.getElementById('tracks');
     this.clearElement = document.getElementById('clear');
     this.clearElement.onclick = (function() {
-        var del = confirm('Are you sure you want to delete track ' + sequencer.getCurrentTrackName());
+        var del = true; //confirm('Are you sure you want to delete track ' + sequencer.getCurrentTrackName());
         if (del) {
             var track = this.sequencer.getCurrentTrack();
             var grid = this.sequencer.getCurrentGrid();
             track.removeAll();
             grid.removeAll();
-            
         }
     }).bind(this);  
     this.tracksElement.onchange = (function() {
@@ -540,20 +585,20 @@ var Sequencer = function () {
     this.controls = new Controls(this.song, this.piano, grid, this);
     this.controls.addListeners();    
     this.getSaved();
-    console.log(this.tracks);
+    // console.log(this.tracks);
     for (var i = 0; i < this.tracks.length; i++) {
         this.drawMain(this.tracks[i], this.allSavedNotes[i]);
     }
-    console.log(this.index);
+    // console.log(this.index);
     this.drawMain(this.tracks[0]);
     
     for (var key in instrumentList) {
         this.controls.addTrack(key);
     }
 
-    setInterval(function() {
-        this.save();
-    }.bind(this), 1000);
+    // setInterval(function() {
+        // this.save();
+    // }.bind(this), 1000);
 
 };
 
@@ -568,26 +613,26 @@ Sequencer.prototype.drawMain = function(track, savedNotes) {
 
 
 Sequencer.prototype.save = function() {
-    localStorage.setItem('notes', JSON.stringify(this.song.getAllNotes()));
-    localStorage.setItem('tempo', this.song.tempo);
+    // localStorage.setItem('notes', JSON.stringify(this.song.getAllNotes()));
+    // localStorage.setItem('tempo', this.song.tempo);
 };
 
 Sequencer.prototype.getSaved = function() {    
-    this.allSavedNotes = JSON.parse(localStorage.getItem('notes'));
-    var tempo = localStorage.getItem('tempo');
-    
-    try {
-        for (var i = 0; i < this.allSavedNotes.length; i++) {
-            this.tracks[i].notes = this.allSavedNotes[i];
-        }
-        if(tempo != null && tempo != undefined) {
-            this.song.changeTempo(parseInt(tempo, 10));
-            document.getElementById('tempo').value = tempo;
-        }
-    }
-    catch(err){
+    // this.allSavedNotes = JSON.parse(localStorage.getItem('notes'));
+    // var tempo = localStorage.getItem('tempo');
+//     
+    // try {
+        // for (var i = 0; i < this.allSavedNotes.length; i++) {
+            // this.tracks[i].notes = this.allSavedNotes[i];
+        // }
+        // if(tempo != null && tempo != undefined) {
+            // this.song.changeTempo(parseInt(tempo, 10));
+            // document.getElementById('tempo').value = tempo;
+        // }
+    // }
+    // catch(err){
         this.allSavedNotes = [];
-    } 
+    // } 
 };
 
 Sequencer.prototype.getCurrentTrack = function() {
@@ -611,6 +656,6 @@ var initialize = function(startNote) {
     var counterHeight = document.getElementById('measure-counter').clientHeight;
     var height = window.innerHeight - menuHeight - counterHeight - 20;
     document.getElementById('main').style.height = height + "px";
-    document.getElementById('quarter').style.border = "inset";
+    // document.getElementById('quarter').style.border = "inset";
 };
 

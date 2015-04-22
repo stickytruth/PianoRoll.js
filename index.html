@@ -1,87 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>   
-        <script src="javascript/Audiolet.js"></script>
-        <script src="javascript/instruments.js"></script>
-        <script src="javascript/JSequencer.js"></script>
-        <script src="javascript/ui.js"></script> 
-        <script type="application/javascript">
-        function start() {
-            //console.time('foo');
-            initialize();
-            var sequencer = new Sequencer();
+	<head>
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.js" type="text/javascript"></script>
+		<script src="javascript/Audiolet.js"></script>
+		<script src="javascript/instruments.js"></script>
+		<script src="javascript/JSequencer.js"></script>
+		<script src="javascript/ui.js"></script>
+		<meta charset="utf-8" />
+		<meta name="description" content="PianoRoll.js is a Music Sequencer that runs in your browser written completely with HTML5 canvas, HTML5 audio and JavaScript." >
+		<title>PianoRoll.js</title>
+		<link type="text/css" rel="stylesheet" href="style/main.css">
+	</head>
+	<body onload="start()">
 
-            document.getElementById("grid-container").onscroll = function() {
-                document.getElementById("piano-container").scrollTop = this.scrollTop;
-                document.getElementById("measure-counter-container").scrollLeft = this.scrollLeft;
-            };
-            //console.timeEnd('foo'); 
-        }
-        </script>
-        <meta charset="utf-8" />
-        <meta name="description" content="PianoRoll.js is a Music Sequencer that runs in your browser written completely with HTML5 canvas, HTML5 audio and JavaScript." >
-        <title>PianoRoll.js</title>
-        <link type="text/css" rel="stylesheet" href="style/main.css">
-    </head>
-    <body onload="start()">
-    
-    <div id="menu">
-        <div id="about">
-            <a href="https://github.com/bobenheimer/PianoRoll.js" target = "_blank">PianoRoll.js</a> is a Music Sequencer that runs in your browser written completely with HTML5 canvas, HTML5 audio and JavaScript.  The audio portion is built on top of 
-            <a href="https://github.com/oampo/Audiolet" target = "_blank">Audiolet</a>. Documentation <a href="http://www.oliphaunts.com/projects.html" target = "_blank">here.</a>
-            <!-- PianoRoll.js functions as a basic multi-track music Sequencer and even saves songs via local browser storage. -->
-        </div> 
-        <div id="options">
-            <div id="note-lengths">   
-                <div id="whole"><img src="images/whole-note.jpg" alt="whole note"/></div>
-                <div id="half"><img src="images/half-note.jpg" alt="half note"/></div>
-                <div id="quarter"><img src="images/quarter-note.jpg" alt="quarter note"/></div>
-                <div id="eight"><img src="images/eigth-note.jpg" alt="eighth note"/></div>
-                <div id="sixteenth"><img src="images/sixteenth-note.jpg" alt="sixteenth note"/></div>
-            </div>
-    
-            <div id="song-controls">
-                <span>Tempo: </span><input id = "tempo" type="number" min="30" max="400" step="1" value="100">
-                <button id="play-button"><img src="images/play.png" alt="play" /></button>
-            </div>
-            <div id="tracks-container">
-                Tracks
-                <select name="tracks" id="tracks">
-    
-                </select>
-            </div>
-            <div>
-                <button id="clear">Clear Track</button>
-            </div>       
-        </div>
+		<div id="menu">
+			<div id="about">
+				[VOLUME WARNING] Based on <a href="https://github.com/bobenheimer/PianoRoll.js" target = "_blank">PianoRoll.js</a>
+				Select a Track and Dataset, click Load, click Play.
+			</div>
+			<div id="options">
+				<div id="note-lengths" style="display: none">
+					<div id="whole"><img src="images/whole-note.jpg" alt="whole note"/>
+					</div>
+					<div id="half"><img src="images/half-note.jpg" alt="half note"/>
+					</div>
+					<div id="quarter"><img src="images/quarter-note.jpg" alt="quarter note"/>
+					</div>
+					<div id="eight"><img src="images/eigth-note.jpg" alt="eighth note"/>
+					</div>
+					<div id="sixteenth"><img src="images/sixteenth-note.jpg" alt="sixteenth note"/>
+					</div>
+				</div>
+				
+				<div>
+					<button id="clear">
+						Clear Track
+					</button>
+				</div>
+				
+				<div id="tracks-container">
+					Tracks
+					<select name="tracks" id="tracks">
+					</select>
+				</div>
+				
+				<div id="data-container">
+					Dataset
+					<select name="dataset" id="dataset"></select>
+					<button id="datasetload">Load</button>
+				</div>
+				
+				<div id="song-controls">
+					<span>Tempo: </span>
+					<input id = "tempo" type="number" min="30" max="400" step="1" value="100">
+					<button id="play-button">
+						<!-- <img src="images/play.png" alt="play" /> -->
+						Play
+					</button>
+				</div>
+				
+			</div>
 
-    </div>
+		</div>
 
-    <div id="beat">
+		<div id="beat">
 
-    </div>
-    <div id="measure-counter-container">
-        <div id="measure-counter">
-            <canvas id="measure-counter-canvas" width="3200" height="25"></canvas>
-        </div>    
-    </div>
+		</div>
+		<div id="measure-counter-container">
+			<div id="measure-counter">
+				<canvas id="measure-counter-canvas" width="18000" height="25"></canvas>
+			</div>
+		</div>
 
-        
-    <div id="main">
-        <div id="piano-container">
-            <div id="piano">
-                 <canvas id="white-keys"  width="150"></canvas>                
-                 <canvas id="black-keys"  width="150"></canvas>
-            </div>
-        </div>
-        <div id="grid-container">
-            <div id="grid">
-                <canvas id="canvas-notes" width="3200"></canvas>
-                <canvas id="canvas-grid" width="3200"></canvas>
-            </div>
-        </div>    
-    </div>
+		<div id="main">
+			<div id="piano-container">
+				<div id="piano">
+					<canvas id="white-keys"  width="150"></canvas>
+					<canvas id="black-keys"  width="150"></canvas>
+				</div>
+			</div>
+			<div id="grid-container">
+				<div id="grid">
+					<canvas id="canvas-notes" width="18000"></canvas>
+					<canvas id="canvas-grid" width="18000"></canvas>
+				</div>
+			</div>
+		</div>
+		
+		<a href="https://github.com/stickytruth/PianoRoll.js"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+		
+		<script type="application/javascript">
+			// var availData = [['April 20', 'apr20.json']];
+			var availData = {
+							 'April 2': 'apr2.json',
+							 'April 3': 'apr3.json',
+							 'April 4': 'apr4.json',
+							 'April 5': 'apr5.json',
+							 'April 6': 'apr6.json',
+							 'April 7': 'apr7.json',
+							 'April 8': 'apr8.json',
+							 'April 9': 'apr9.json',
+							 'April 10': 'apr10.json',
+							 'April 11': 'apr11.json',
+							 'April 12': 'apr12.json',
+							 'April 13': 'apr13.json',
+							 'April 14': 'apr14.json',
+							 'April 15': 'apr15.json',
+							 'April 16': 'apr16.json',
+							 'April 17': 'apr17.json',
+							 'April 18': 'apr18.json',
+							 'April 19': 'apr19.json',
+							 'April 20': 'apr20.json',
+							 'April 21': 'apr21.json',
+							 'April 22': 'apr22.json',
+							 };
+			var sequencer;
+			
+			datasetElement = document.getElementById('dataset');
+			datasetloadElement = document.getElementById('datasetload');
+				
+			addDataset = function(name) {
+			    datasetElement.options[datasetElement.options.length]= new Option(name, name);
+			};
+			
+			for (var d in availData){
+				addDataset(d+' AM');
+				addDataset(d+' PM');
+			}
+			
+			datasetloadElement.addEventListener('click', function() {
+		        var name = datasetElement.options[datasetElement.selectedIndex].value;
+		        var name_s = name.split(' ');
+		        var file = 'apr' + name_s[1] + '.json';
+		        load_dataset(file, name_s[2]);
+		    }, false);
+			
+			var jsdata;
+			function load_dataset(name, ampm){
+				var track = sequencer.getCurrentTrack().removeAll();
+	            var grid = sequencer.getCurrentGrid().removeAll();
 
-    </body>
+				$.ajax({
+					type : 'GET',
+					url : 'data/' + name,
+					dataType : 'json',
+					success : function(data) {
+						jsdata = data;
+					},
+					data : {},
+					async : false
+				});
+				
+				if (ampm == 'AM') { offset = 0; }
+				else { offset = 720; }
+				end = offset + 720;
+
+				for ( i = offset; i < end; i++) {
+					m = jsdata[i];
+					for (j=0; j<m.length; j++){
+						invSeconds = 60 - m[j][1];
+						noteLen = m[j][2];
+						n = (i - offset);
+						if (n + noteLen >= 720){
+							continue;
+						}
+						sequencer.getCurrentGrid().processSecond(n, j, invSeconds, noteLen);
+					}
+				}
+			}
+			
+			function start() {
+				initialize();
+				sequencer = new Sequencer();
+
+				document.getElementById("grid-container").onscroll = function() {
+					document.getElementById("piano-container").scrollTop = this.scrollTop;
+					document.getElementById("measure-counter-container").scrollLeft = this.scrollLeft;
+				};
+			}
+		</script>
+	</body>
 </html>
-   

@@ -43,10 +43,14 @@ img {
 }
 
 #song-controls {
-    background-color: #FFF;
+    color: #E5E5E5;
 }
 
 #tracks-container {
+    color: #E5E5E5;
+}
+
+#data-container {
     color: #E5E5E5;
 }
 
